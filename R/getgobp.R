@@ -19,8 +19,8 @@
 #' 
 get.W <- function(graph, laresult, z.matrix, cutoff, k=2) {
   xlist = row.names(z.matrix)
-  LANDDdata <- setRefClass("LANDDdata",
-                         fields = list(x = "character", y = "character"))
+  #LANDDdata <- setRefClass("LANDDdata",
+  #                       fields = list(x = "character", y = "character"))
   LANDDList<-c()
   for(x in xlist){
     if(sum(laresult[x,])!=0 && length(z.matrix[x,][z.matrix[x,]>cutoff])!=0){
@@ -35,11 +35,12 @@ get.W <- function(graph, laresult, z.matrix, cutoff, k=2) {
       LANDDList <- rbind(LANDDList,cbind(x,y,z,w))
     }
   }
+  if(is.null(LANDDList)) {
+    print("cutoff too high.")
+    return(NULL)
+  }
   colnames(LANDDList)<-c("x","y","z","w:w_value")
   return(LANDDList)
-
-  
-  
 } 
   
   

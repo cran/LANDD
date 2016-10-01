@@ -1,4 +1,4 @@
-#' Find weights based on kernel density on the graph.
+ #' Find weights based on kernel density on the graph.
 #'  
 #' There are three common ways to invoke \code{graph.kd}:
 #' \itemize{
@@ -14,7 +14,8 @@
 #' 
 #' @param relate.matrix The matrix returned by lascouting.
 #' @param network.graph The igraph object representing the gene network.
-#' @param smoothing.normalize Different ways to normalize the result.
+#' @param smoothing.normalize Different ways to normalize the result, default would be "one".
+#' @param kernel.sd standard deviation for kernel, default would be 1.
 #' @return A matrix representing the weights calculated using kernel density for each gene. Each row is an ego gene, columns
 #' are the weights of potential scouting genes for the gene. 
 #' @examples \dontrun{
@@ -24,7 +25,7 @@
 #' @import igraph
 #' @importFrom stats dnorm
 
-graph.kd <- function(relate.matrix, network.graph, smoothing.normalize = c("one", "squareM", "none")) {
+graph.kd <- function(relate.matrix, network.graph, kernel.sd = 1,smoothing.normalize = c("one", "squareM", "none")) {
   smoothing.normalize <- match.arg(smoothing.normalize)
   
   network.node <- V(network.graph)$name
@@ -34,9 +35,9 @@ graph.kd <- function(relate.matrix, network.graph, smoothing.normalize = c("one"
     network.graph <- cleanGraph(network.graph, common.node)
   }
   #weight = c(dnorm(0),dnorm(1),dnorm(2))
-  weight0 <- dnorm(0)
-  weight1 <- dnorm(1)
-  weight2 <- dnorm(2)
+  weight0 <- dnorm(0,sd=kernel.sd)
+  weight1 <- dnorm(1,sd=kernel.sd)
+  weight2 <- dnorm(2,sd=kernel.sd)
   
   size <- nrow(relate.matrix)
   
@@ -59,14 +60,14 @@ graph.kd <- function(relate.matrix, network.graph, smoothing.normalize = c("one"
     rsum <- rowSums(as.matrix(weight.matrix))
     nmatrix <- diag(1/rsum)
     colnames(nmatrix) <- rownames(weight.matrix)
-    weight.matrix <- nmatrix %*% weight.matrix
+    weight.matrix <- as(nmatrix, "dgCMatrix") %*% weight.matrix
   } else if (smoothing.normalize == "squareM") {
     temp.weight.matrix <- as.matrix(weight.matrix)
     rsum <- rowSums(temp.weight.matrix)
     m <- rowSums(temp.weight.matrix != 0)
     nmatrix <- diag(sqrt(m)/rsum)
     colnames(nmatrix) <- rownames(weight.matrix)
-    weight.matrix <- nmatrix %*% weight.matrix
+    weight.matrix <- as(nmatrix, "dgCMatrix") %*% weight.matrix
     
   }
   
